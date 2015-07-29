@@ -201,6 +201,7 @@ public class DataSetProcessInstanceWithVariablesListPresenter extends AbstractSc
                                 }
                             }
                             if (filterValue != null) {
+                                final int rowCountNotTrimmed = dataSet.getRowCountNonTrimmed();
                                 dataSetQueryHelper.setDataSetHandler(view.getVariablesTableSettings(filterValue));
 
                                 dataSetQueryHelper.setLastOrderedColumn("pname");
@@ -208,14 +209,14 @@ public class DataSetProcessInstanceWithVariablesListPresenter extends AbstractSc
                                 dataSetQueryHelper.lookupDataSet(0, new DataSetReadyCallback() {
                                     @Override
                                     public void callback(DataSet dataSet) {
-                                        
+
                                         Set<String> columns = new HashSet<String>();
                                         for (int i = 0; i < dataSet.getRowCount(); i++) {
                                             Long processInstanceId = dataSetQueryHelper.getColumnLongValue(dataSet, DataSetProcessInstanceWithVariablesListViewImpl.PROCESS_INSTANCE_ID, i);
                                             String variableName = dataSetQueryHelper.getColumnStringValue(dataSet, DataSetProcessInstanceWithVariablesListViewImpl.VARIABLE_NAME, i);
                                             String variableValue = dataSetQueryHelper.getColumnStringValue(dataSet, DataSetProcessInstanceWithVariablesListViewImpl.VARIABLE_VALUE, i);
                                             GWT.log("processInstanceId: "+processInstanceId + " - "+ "Variable Name: "+variableName + " - "+ "Variable Value: "+variableValue);
-                                           
+
                                             for (ProcessInstanceSummary pis : myProcessInstancesFromDataSet) {
                                                 if (pis.getProcessInstanceId().equals(processInstanceId)) {
                                                     pis.addDomainData(variableName, variableValue);
@@ -230,9 +231,9 @@ public class DataSetProcessInstanceWithVariablesListPresenter extends AbstractSc
                                         PageResponse<ProcessInstanceSummary> processInstanceSummaryPageResponse = new PageResponse<ProcessInstanceSummary>();
                                         processInstanceSummaryPageResponse.setPageRowList(myProcessInstancesFromDataSet);
                                         processInstanceSummaryPageResponse.setStartRowIndex(visibleRange.getStart());
-                                        processInstanceSummaryPageResponse.setTotalRowSize(dataSet.getRowCountNonTrimmed());
+                                        processInstanceSummaryPageResponse.setTotalRowSize(rowCountNotTrimmed);
                                         processInstanceSummaryPageResponse.setTotalRowSizeExact(true);
-                                        if (visibleRange.getStart() + dataSet.getRowCount() == dataSet.getRowCountNonTrimmed()) {
+                                        if ( visibleRange.getStart() + myProcessInstancesFromDataSet.size() == rowCountNotTrimmed ) {
                                             processInstanceSummaryPageResponse.setLastPage(true);
                                         } else {
                                             processInstanceSummaryPageResponse.setLastPage(false);

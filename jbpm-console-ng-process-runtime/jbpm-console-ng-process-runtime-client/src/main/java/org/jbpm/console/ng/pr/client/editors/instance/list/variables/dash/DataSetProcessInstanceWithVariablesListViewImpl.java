@@ -312,15 +312,17 @@ public class DataSetProcessInstanceWithVariablesListViewImpl extends AbstractMul
             boolean add = true;
             for (ColumnMeta<ProcessInstanceSummary> cm : extendedPagedTable.getColumnMetaList()) {
                 if(cm.isExtraColumn()){
-                    extendedPagedTable.removeColumnMeta(cm);
+                    //extendedPagedTable.removeColumnMeta(cm);
                 }
                 if (cm.getCaption().equals(c)) {
+                    c = "VAR_" + c;
                     add = false;
                 }
             }
             if (add) {
-                
+
                 Column genericColumn = initGenericColumn(c);
+                genericColumn.setSortable( false );
                 List<ColumnMeta<ProcessInstanceSummary>> columnMetas = new ArrayList<ColumnMeta<ProcessInstanceSummary>>();
                 columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(genericColumn, c , true, true));
                 extendedPagedTable.addColumns(columnMetas);
