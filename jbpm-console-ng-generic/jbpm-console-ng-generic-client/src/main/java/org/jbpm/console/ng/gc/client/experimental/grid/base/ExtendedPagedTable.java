@@ -76,7 +76,6 @@ public class ExtendedPagedTable<T extends GenericSummary> extends PagedTable<T> 
   }
 
   public void removeColumnMeta(ColumnMeta<T> columnMeta){
-      dataGrid.removeColumn(columnMeta.getColumn());
       columnPicker.removeColumn(columnMeta);
   }
   

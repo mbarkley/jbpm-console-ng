@@ -48,6 +48,7 @@ import org.jbpm.console.ng.pr.model.events.ProcessInstancesWithDetailsRequestEve
 import org.kie.api.runtime.process.ProcessInstance;
 import org.uberfire.client.mvp.PlaceStatus;
 import org.uberfire.client.workbench.events.BeforeClosePlaceEvent;
+import org.uberfire.ext.services.shared.preferences.GridColumnPreference;
 import org.uberfire.ext.services.shared.preferences.GridGlobalPreferences;
 
 import static org.dashbuilder.dataset.sort.SortOrder.DESCENDING;
@@ -302,33 +303,67 @@ public class DataSetProcessInstanceWithVariablesListViewImpl extends AbstractMul
         columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(processStateColumn, constants.State()));
         columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(startTimeColumn, constants.Start_Date()));
         columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(actionsColumn, constants.Actions()));
+
+        List<GridColumnPreference> columPreferenceList = extendedPagedTable.getGridPreferencesStore().getColumnPreferences();
+
+        for(GridColumnPreference colPref : columPreferenceList){
+            if(!isColumnAdded( columnMetas,colPref.getName())){
+                Column genericColumn = initGenericColumn(colPref.getName());
+                genericColumn.setSortable( false );
+                columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(genericColumn, colPref.getName() , true, true));
+            }
+        }
         extendedPagedTable.addColumns(columnMetas);
+    }
+
+    private boolean isColumnAdded(List<ColumnMeta<ProcessInstanceSummary>> columnMetas, String caption){
+        if(caption !=null ) {
+            for ( ColumnMeta<ProcessInstanceSummary> colMet : columnMetas ) {
+                if ( caption.equals( colMet.getCaption() ) ) return true;
+            }
+        }
+        return false;
     }
 
     public void addDomainSpecifColumns(ExtendedPagedTable<ProcessInstanceSummary> extendedPagedTable, Set<String> columns) {
         GWT.log("Adding COlumns : "+columns);
-        for (String c : columns) {
+        extendedPagedTable.storeColumnToPreferences();
 
-            boolean add = true;
-            for (ColumnMeta<ProcessInstanceSummary> cm : extendedPagedTable.getColumnMetaList()) {
-                if(cm.isExtraColumn()){
-                    //extendedPagedTable.removeColumnMeta(cm);
-                }
-                if (cm.getCaption().equals(c)) {
-                    c = "VAR_" + c;
-                    add = false;
+        HashMap modifiedCaptions= new HashMap <String, String>(  );
+        ArrayList<ColumnMeta> existingExtraColumns= new ArrayList<ColumnMeta>(  );
+        for (ColumnMeta<ProcessInstanceSummary> cm : extendedPagedTable.getColumnMetaList()) {
+            if(cm.isExtraColumn()){
+                existingExtraColumns.add(cm );
+            } else if(columns.contains( cm.getCaption())){      //exist a column with the same caption
+                for (String c : columns) {
+                    if(c.equals( cm.getCaption() )){
+                        modifiedCaptions.put( c,"Var_"+c );
+                    }
                 }
             }
-            if (add) {
-
-                Column genericColumn = initGenericColumn(c);
-                genericColumn.setSortable( false );
-                List<ColumnMeta<ProcessInstanceSummary>> columnMetas = new ArrayList<ColumnMeta<ProcessInstanceSummary>>();
-                columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(genericColumn, c , true, true));
-                extendedPagedTable.addColumns(columnMetas);
-            }
-
         }
+        for(ColumnMeta colMet : existingExtraColumns){
+            if(!columns.contains( colMet.getCaption()  )) {
+                extendedPagedTable.removeColumnMeta( colMet );
+            } else{
+                columns.remove( colMet.getCaption() );
+            }
+        }
+
+        List<ColumnMeta<ProcessInstanceSummary>> columnMetas = new ArrayList<ColumnMeta<ProcessInstanceSummary>>();
+        String caption="";
+        for (String c : columns) {
+            caption=c;
+            if(modifiedCaptions.get(c)!= null){
+                caption = (String) modifiedCaptions.get(c);
+            }
+            Column genericColumn = initGenericColumn(c);
+            genericColumn.setSortable( false );
+
+            columnMetas.add(new ColumnMeta<ProcessInstanceSummary>(genericColumn, caption , true, true));
+        }
+
+        extendedPagedTable.addColumns(columnMetas);
 
     }
 
